@@ -1,0 +1,31 @@
+# This is the default format.
+# For more see: http://jekyllrb.com/docs/permalinks/
+permalink: /:title
+# https://help.github.com/articles/migrating-your-pages-site-from-maruku
+markdown: kramdown
+
+highlighter: pygments
+paginate: 20 # pagination based on number of posts
+paginate_path: "page/:num"
+
+# These paths are to the main pages Jekyll-Bootstrap ships with.
+# Some JB helpers refer to these paths; change them here if needed.
+#
+categories_path : categories.html
+tags_path : tags.html
+
+BASE_PATH : http://blog.kansea.com
+
+
+title : StarboyChina
+
+
+
+author:
+  name: Xinguang Wang
+  role: Hikaru Yamanaka
+  email: github.homepage@kansea.com
+  github: starboychina
+  weibo: starboychina
+  # twitter: talk2ankan
+  bio: "我是王 昕光 (@starboychina)，一名来自中国的开发者。现居日本，就职于 e-business "
