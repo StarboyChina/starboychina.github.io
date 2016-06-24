@@ -145,12 +145,6 @@ sudo docker exec etcd /etcdctl mk /atomic.io/network/config '{"Network":"172.17.
 # 安装 flannel 和 kubernetes-node
 sudo yum -y install flannel kubernetes-node -y
 
-# 配置 docker 网络
-sudo vi /etc/sysconfig/docker-network
-
-# 修改为
-DOCKER_NETWORK_OPTIONS="--bip=172.17.20.1/24 --ip-masq=true --mtu=1472"
-
 # master IP
 master=192.168.8.8
 # node IP
@@ -158,6 +152,16 @@ node=192.168.8.9
 
 # 启动 flanneld
 sudo flanneld -etcd-endpoints=http://${master}:2379 -etcd-prefix=/atomic.io/network &
+
+#查看 /run/flannel/subnet.env
+# 获取 FLANNEL_SUBNET
+# 配置 docker 网络
+sudo vi /etc/sysconfig/docker-network
+
+# 修改为
+DOCKER_NETWORK_OPTIONS="--bip=${FLANNEL_SUBNET} --ip-masq=true --mtu=1472"
+
+
 
 # 启动 docker
 sudo systemctl enable docker
