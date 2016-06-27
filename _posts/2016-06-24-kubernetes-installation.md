@@ -55,7 +55,7 @@ vagrant ssh node
 
 并且为了所有容器能够互通,我们采用 flannel 来构建网络.
 
-本示例不需要上部署容器(不安装 kubelet 及 kube-proxy),所以不需要在 master 上安装 flannel.
+本示例不需要在 master 上部署容器(不安装 kubelet 及 kube-proxy),所以不需要在 master 上安装 flannel.
 
 只需要在 master 上安装 etcd 并配置 flannel 的属性.
 
