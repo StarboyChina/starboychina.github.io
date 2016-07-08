@@ -1,6 +1,6 @@
 ---
 layout: post
-title: 基于 Centos7 搭建Kubernetes (1.2版)
+title: 基于 Centos7 搭建Kubernetes (1.2/1.3版)
 fullview: true
 categories: [分布式,Kubernetes]
 tags: [Kubernetes, Centos7]
@@ -62,6 +62,21 @@ vagrant ssh node
 在 master 上执行
 
 ```shell
+#!/bin/bash
+
+# Kubernetes 版本
+# version=v1.2.4
+version=v1.3.0
+
+# 有条件的话 可以使用 官方 gcr.io/google_containers 的 kube-apiserver / kube-controller-manager / kube-scheduler
+# 或者下载 https://github.com/kubernetes/kubernetes/releases/download/${version}/kubernetes.tar.gz
+# 解压 kubernetes/server/kubernetes-server-linux-amd64.tar.gz
+# 使用 docker load -i kubernetes/server/bin/kube-apiserver.tar
+# 使用 docker load -i kubernetes/server/bin/kube-controller-manager.tar
+# 使用 docker load -i kubernetes/server/bin/kube-scheduler.tar
+# 把镜像导入到本地
+
+
 # 安装 docker
 sudo yum install docker -y
 
@@ -80,17 +95,12 @@ sudo docker run -d -p 2379:2379 \
             --listen-peer-urls http://0.0.0.0:2380
 
 # 启动 kube-apiserver
-# ※ starboychina/kube-apiserver 的版本是 1.2.4
-# 有条件的话可以使用官方镜像 gcr.io/google_containers/kube-apiserver:v1.2.4
-# 或者下载 https://github.com/kubernetes/kubernetes/releases/download/v1.2.4/kubernetes.tar.gz
-# 解压 kubernetes/server/kubernetes-server-linux-amd64.tar.gz
-# 使用 docker load -i kubernetes/server/bin/kube-apiserver.tar
-# 把镜像导入到本地
+# ※ 使用 Docker 上的 starboychina/kube-apiserver 镜像
 sudo docker run -d -p 8080:8080 \
             --restart=always \
             --name apiserver \
             --link etcd:etcd \
-            starboychina/kube-apiserver \
+            starboychina/kube-apiserver:${version} \
             --v=2 \
             --etcd-servers=http://etcd:2379 \
             --insecure-bind-address=0.0.0.0 \
@@ -101,33 +111,23 @@ sudo docker run -d -p 8080:8080 \
             --admission-control=NamespaceLifecycle,NamespaceExists,LimitRanger,SecurityContextDeny,ResourceQuota
 
 # 启动 kube-controller-manager
-# ※ starboychina/kube-controller-manager 的版本是 1.2.4
-# 有条件的话可以使用官方镜像 gcr.io/google_containers/kube-controller-manager:v1.2.4
-# 或者下载 https://github.com/kubernetes/kubernetes/releases/download/v1.2.4/kubernetes.tar.gz
-# 解压 kubernetes/server/kubernetes-server-linux-amd64.tar.gz
-# 使用 docker load -i kubernetes/server/bin/kube-controller-manager.tar
-# 把镜像导入到本地
+# ※ 使用 Docker 上的 starboychina/kube-controller-manager 镜像
 sudo docker run -d \
             --restart=always \
             --name controllermanager \
             --link apiserver:apiserver \
-            starboychina/kube-controller-manager \
+            starboychina/kube-controller-manager:${version} \
             --logtostderr=true \
             --master=http://apiserver:8080 \
             --v=2
 
 # 启动 kube-scheduler
-# ※ starboychina/kube-scheduler 的版本是 1.2.4
-# 有条件的话可以使用官方镜像 gcr.io/google_containers/kube-scheduler:v1.2.4
-# 或者下载 https://github.com/kubernetes/kubernetes/releases/download/v1.2.4/kubernetes.tar.gz
-# 解压 kubernetes/server/kubernetes-server-linux-amd64.tar.gz
-# 使用 docker load -i kubernetes/server/bin/kube-scheduler.tar
-# 把镜像导入到本地
+# ※ 使用 Docker 上的 starboychina/kube-scheduler 镜像
 sudo docker run -d \
             --restart=always \
             --name scheduler \
             --link apiserver:apiserver \
-            starboychina/kube-scheduler \
+            starboychina/kube-scheduler:${version} \
             --logtostderr=true \
             --master=http://apiserver:8080 \
             --v=2
@@ -153,13 +153,17 @@ node=192.168.8.9
 # 启动 flanneld
 sudo flanneld -etcd-endpoints=http://${master}:2379 -etcd-prefix=/atomic.io/network &
 
-#查看 /run/flannel/subnet.env
+# 查看 /run/flannel/subnet.env
 # 获取 FLANNEL_SUBNET
 # 配置 docker 网络
-sudo vi /etc/sysconfig/docker-network
 
+sudo vi /usr/lib/systemd/system/docker.service
+# 在 EnvironmentFile=-/etc/sysconfig/docker-network 上面追加
+# EnvironmentFile=-/run/flannel/subnet.env
+
+sudo vi /etc/sysconfig/docker-network
 # 修改为
-DOCKER_NETWORK_OPTIONS="--bip=${FLANNEL_SUBNET} --ip-masq=true --mtu=1472"
+# DOCKER_NETWORK_OPTIONS="--bip=${FLANNEL_SUBNET} --ip-masq=true --mtu=1472"
 
 
 
